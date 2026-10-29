@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "eyes": "node scripts/auto-eyes.mjs",
-    "test:ocr": "node scripts/test-ocr.mjs"
+    "test:ocr": "node scripts/test-ocr.mjs",
+    "replay": "node scripts/replay.mjs",
+    "build:digits": "node scripts/build-digit-templates.mjs"
   },
   "dependencies": {
     "next": "16.4.2",

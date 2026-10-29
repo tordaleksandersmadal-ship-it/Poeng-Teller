@@ -4,6 +4,8 @@
 //
 //   npm run eyes             start
 //   npm run eyes -- --debug  lagrer siste bilde + utklipp i debug/live/
+//   npm run eyes -- --record lagrer ALLE bilder + OCR i debug/recordings/<tid>/
+//                            (~250 kB per bilde, ca. 200 MB per kamp)
 
 import OBSWebSocket from "obs-websocket-js";
 import fs from "node:fs/promises";
@@ -12,9 +14,24 @@ import readline from "node:readline/promises";
 import { config, REFERENCE } from "./lib/config.mjs";
 import { readFrame } from "./lib/ocr.mjs";
 
-const debugDir = process.argv.includes("--debug")
-  ? path.resolve(import.meta.dirname, "..", "debug", "live")
+const DEBUG_ROOT = path.resolve(import.meta.dirname, "..", "debug");
+const debugDir = process.argv.includes("--debug") ? path.join(DEBUG_ROOT, "live") : undefined;
+const recordDir = process.argv.includes("--record")
+  ? path.join(DEBUG_ROOT, "recordings", new Date().toISOString().replace(/[:.]/g, "-"))
   : undefined;
+
+/** Lagrer bildet og OCR-resultatet så en kamp kan analyseres i etterkant. */
+async function record(iteration, screenshot, frame) {
+  const name = String(iteration).padStart(5, "0");
+  await fs.mkdir(recordDir, { recursive: true });
+  await Promise.all([
+    fs.writeFile(path.join(recordDir, `${name}.jpg`), screenshot),
+    fs.writeFile(
+      path.join(recordDir, `${name}.json`),
+      JSON.stringify({ at: new Date().toISOString(), ...frame }, null, 2)
+    ),
+  ]);
+}
 
 const obs = new OBSWebSocket();
 let running = true;
@@ -67,7 +84,6 @@ function printStatus(iteration, frame, apiError) {
     `Modus: ${frame.spectating ? `TILSKUER (${frame.spectatingName ?? "ukjent"})` : "spiller"}`
   );
   console.log(`Spillere igjen: ${frame.playersLeft ?? "usikker"}   (rå: ${JSON.stringify(frame.raw.players)})`);
-  console.log(`Kills:          ${frame.kills ?? "usikker"}   (rå: ${JSON.stringify(frame.raw.kills)})`);
   console.log("\n--- Elimineringer i killfeed ---");
   console.log(
     frame.eliminations.length
@@ -77,6 +93,7 @@ function printStatus(iteration, frame, apiError) {
   console.log("\n--- Rå killfeed-tekst ---");
   console.log(frame.raw.killfeed || "(ingen tekst)");
   console.log(apiError ? `\nNettside: FEIL – ${apiError}` : "\nNettside: oppdatert");
+  if (recordDir) console.log(`Tar opp til: ${recordDir}`);
 }
 
 async function main() {
@@ -96,7 +113,9 @@ async function main() {
       if (!obs.identified) await connectOBS(password);
 
       iteration++;
-      const frame = await readFrame(await captureOBS(), debugDir);
+      const screenshot = await captureOBS();
+      const frame = await readFrame(screenshot, debugDir);
+      if (recordDir) await record(iteration, screenshot, frame);
 
       // Vis alltid OCR-resultatet, også om nettsiden er nede.
       let apiError = null;

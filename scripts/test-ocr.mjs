@@ -14,19 +14,24 @@ const debug = process.argv.includes("--debug");
 const CASES = [
   {
     file: "normal.jpg",
-    expect: { kills: 3, playersLeft: 29, spectating: false, victims: ["JellyBeats81"] },
+    expect: { playersLeft: 29, spectating: false, victims: ["JellyBeats81"] },
   },
   {
     file: "spectator.jpg",
-    expect: { kills: 2, playersLeft: 92, spectating: true, victims: ["Anonymous[264]"] },
+    expect: { playersLeft: 92, spectating: true, victims: ["Anonymous[264]"] },
+  },
+  {
+    // Fra en ekte testkamp: lys rosa himmel bak HUD-tallene, langt navn i banneret.
+    file: "spectator-bright-sky.jpg",
+    expect: { playersLeft: 79, spectating: true, victimsInclude: ["AyeBall23"] },
   },
   {
     file: "end-screen.jpg",
-    expect: { kills: null, playersLeft: null, spectating: false, victims: [] },
+    expect: { playersLeft: null, spectating: false, victims: [] },
   },
   {
     file: "lobby-720p.png",
-    expect: { kills: null, playersLeft: null, spectating: false, victims: [] },
+    expect: { playersLeft: null, spectating: false, victims: [] },
   },
 ];
 
@@ -38,14 +43,15 @@ for (const { file, expect } of CASES) {
   const frame = await readFrame(image, debugDir);
 
   const actual = {
-    kills: frame.kills,
     playersLeft: frame.playersLeft,
     spectating: frame.spectating,
     victims: frame.eliminations.map((e) => e.victim),
   };
 
   const same = (key) =>
-    key === "victims"
+    key === "victimsInclude"
+      ? expect.victimsInclude.every((v) => actual.victims.some((a) => nameKey(a) === nameKey(v)))
+      : key === "victims"
       ? JSON.stringify(actual.victims.map(nameKey)) === JSON.stringify(expect.victims.map(nameKey))
       : actual[key] === expect[key];
   const problems = Object.keys(expect).filter((key) => !same(key));

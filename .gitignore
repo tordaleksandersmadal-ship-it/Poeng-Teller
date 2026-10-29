@@ -42,3 +42,6 @@ next-env.d.ts
 
 # OCR-feilsøking (npm run eyes -- --debug)
 /debug/
+
+# Turneringsdata (lagres av serveren)
+/data/

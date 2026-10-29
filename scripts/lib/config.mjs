@@ -17,14 +17,11 @@ export const config = {
 export const REFERENCE = { width: 1920, height: 1080 };
 
 export const REGIONS = {
-  // Tallet til venstre for hodeskalle-ikonet (oppe til høyre).
-  // I tilskuermodus ligger det under den mørke stripen øverst og er svært svakt.
-  kills: { left: 1480, top: 36, width: 100, height: 28 },
-  // Tallet til venstre for person-ikonet, rett under kills.
-  // Må IKKE ta med timeren under (0:28), da blir avlesningen ødelagt.
-  players: { left: 1480, top: 72, width: 100, height: 28 },
-  // "SPECTATING: <navn>" oppe i høyre hjørne.
-  spectating: { left: 1640, top: 8, width: 280, height: 32 },
-  // Killfeed nede til venstre. Høy nok til ~5 linjer.
-  killfeed: { left: 35, top: 560, width: 650, height: 150 },
+  // ("Spillere igjen" leses med siffermaler, se digits.mjs.)
+  // "SPECTATING: <navn>" oppe i høyre hjørne. Høyrejustert, så lange navn
+  // går langt mot venstre.
+  spectating: { left: 1300, top: 8, width: 620, height: 32 },
+  // Killfeed nede til venstre. Høy nok til ~5 linjer, bred nok til
+  // "... with a Sweeper Shotgun".
+  killfeed: { left: 35, top: 560, width: 750, height: 150 },
 };
